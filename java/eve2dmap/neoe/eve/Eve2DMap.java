@@ -5,6 +5,8 @@ import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -22,8 +24,83 @@ import javax.swing.JFrame;
 
 public class Eve2DMap {
 
+	public static class HelpWindow implements Widge {
+
+		private MapPanel panel;
+
+		private boolean dead;
+
+		private long startt;
+
+		public HelpWindow(final MapPanel panel) {
+			this.panel = panel;
+			startt=System.currentTimeMillis();
+			new Thread() {
+				public void run() {
+					//close thread
+					try {
+						Thread.sleep(5000);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					dead = true;					
+					panel.repaint();
+					panel.isHelpShown=false;
+				}
+			}.start();
+			new Thread() {
+				public void run() {
+					// repaint thread
+					try {
+						while(!dead){
+							Thread.sleep(1000);
+							panel.repaint();
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}					
+				}
+			}.start();
+		}
+
+		public void draw(Graphics2D g2) {
+			int w = 200;
+			int h = 130;
+			g2.setColor(new Color(0.8f, 0.1f, 0.1f, 0.5f));
+			int x, y;
+			g2.fillRect(x = (panel.getWidth() - w) / 2,
+					y = (panel.getHeight() - h) / 2, w, h);
+			g2.setColor(Color.WHITE);
+			String[] msg = { "Mouse Drag: Move", "Mouse Scroll: Zoom",
+					"Shift + Mouse Scroll: Zoom Y-axis" };
+			y += 20;
+			for (String line : msg) {
+				g2.drawString(line, x, y);
+				y += 20;
+			}
+			y += 20;
+			int sec=(int)Math.max(0, 5-(System.currentTimeMillis()-startt)/1000);
+			g2.setColor(Color.GREEN);
+			g2.drawString("Closing in "+sec+" sec", x, y);
+			
+		}
+
+		public boolean isDead() {
+			return dead;
+		}
+
+	}
+
+	public interface Widge {
+
+		void draw(Graphics2D g2);
+
+		boolean isDead();
+
+	}
+
 	public static class MapPanel extends JComponent implements MouseListener,
-			MouseMotionListener, MouseWheelListener {
+			MouseMotionListener, MouseWheelListener, KeyListener {
 		private static final int MAXP = 10000;
 
 		private static final int MAXL = 10000;
@@ -78,6 +155,8 @@ public class Eve2DMap {
 
 		private int linecnt;
 
+		private boolean isHelpShown = false;
+
 		public MapPanel() {
 			pointx = new float[MAXP];
 			pointy = new float[MAXP];
@@ -89,6 +168,8 @@ public class Eve2DMap {
 			addMouseWheelListener(this);
 			addMouseMotionListener(this);
 			addMouseListener(this);
+			addKeyListener(this);
+			setFocusable(true);
 		}
 
 		@Override
@@ -128,6 +209,23 @@ public class Eve2DMap {
 			// draw lines
 			drawLines(g2);
 
+			List<Widge> dead = new ArrayList<Widge>();
+			int cnt = 0;
+			for (Widge w : widges) {
+				if (w.isDead()) {
+					dead.add(w);
+				} else {
+					cnt++;
+					w.draw(g2);
+				}
+			}
+			System.out.println("draw widges " + cnt);
+
+			if (dead.size() > 0) {
+				widges.removeAll(dead);
+				System.out.println("remove widges " + dead.size() + " remains "
+						+ widges.size());
+			}
 		}
 
 		private void drawLines(Graphics2D g2) {
@@ -194,6 +292,7 @@ public class Eve2DMap {
 		}
 
 		private int[] adjustxy(int x, int y, int maxl, int i) {
+			// make text not collapse, but due to performce reason, not usable
 			boolean changed = true;
 			int absx = 0;
 			int absy = 0;
@@ -340,6 +439,32 @@ public class Eve2DMap {
 			zy = (maxy - miny) / height;
 		}
 
+		public void keyPressed(KeyEvent e) {
+			System.out.println(e.getKeyCode());
+			if (e.getKeyCode() == KeyEvent.VK_F1) {
+				
+				showHelp();
+			}
+		}
+
+		public void keyReleased(KeyEvent e) {
+
+		}
+
+		public void keyTyped(KeyEvent e) {
+
+		}
+
+		private void showHelp() {
+			if (isHelpShown) {
+				return;
+			}
+			isHelpShown = true;
+			widges.add(new HelpWindow(this));
+			repaint();
+		}
+
+		private List<Widge> widges = new ArrayList<Widge>();
 	}
 
 	/**
