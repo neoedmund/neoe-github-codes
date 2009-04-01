@@ -14,6 +14,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,31 +35,31 @@ public class Eve2DMap {
 
 		public HelpWindow(final MapPanel panel) {
 			this.panel = panel;
-			startt=System.currentTimeMillis();
+			startt = System.currentTimeMillis();
 			new Thread() {
 				public void run() {
-					//close thread
+					// close thread
 					try {
 						Thread.sleep(5000);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					dead = true;					
+					dead = true;
 					panel.repaint();
-					panel.isHelpShown=false;
+					panel.isHelpShown = false;
 				}
 			}.start();
 			new Thread() {
 				public void run() {
 					// repaint thread
 					try {
-						while(!dead){
+						while (!dead) {
 							Thread.sleep(1000);
 							panel.repaint();
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
-					}					
+					}
 				}
 			}.start();
 		}
@@ -79,10 +80,11 @@ public class Eve2DMap {
 				y += 20;
 			}
 			y += 20;
-			int sec=(int)Math.max(0, 5-(System.currentTimeMillis()-startt)/1000);
+			int sec = (int) Math.max(0,
+					5 - (System.currentTimeMillis() - startt) / 1000);
 			g2.setColor(Color.GREEN);
-			g2.drawString("Closing in "+sec+" sec", x, y);
-			
+			g2.drawString("Closing in " + sec + " sec", x, y);
+
 		}
 
 		public boolean isDead() {
@@ -442,7 +444,6 @@ public class Eve2DMap {
 		public void keyPressed(KeyEvent e) {
 			System.out.println(e.getKeyCode());
 			if (e.getKeyCode() == KeyEvent.VK_F1) {
-				
 				showHelp();
 			}
 		}
@@ -491,8 +492,9 @@ public class Eve2DMap {
 		// }
 		List<String> idlist = new ArrayList<String>(MapPanel.MAXP);
 		try {
-			BufferedReader in = new BufferedReader(new FileReader(
-					"C:/tmp/eveexp2/mapSolarSystems.txt"));
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					Eve2DMap.class.getClassLoader().getResourceAsStream(
+							"mapSolarSystems.txt"), "utf8"));
 			in.readLine();
 			String l;
 			Object[] buf = new Object[3];
@@ -524,8 +526,9 @@ public class Eve2DMap {
 		}
 		System.out.println("build index ok");
 		try {
-			BufferedReader in = new BufferedReader(new FileReader(
-					"C:/tmp/eveexp2/mapSolarSystemJumps.txt"));
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					Eve2DMap.class.getClassLoader().getResourceAsStream(
+							"mapSolarSystemJumps.txt"), "utf8"));
 			in.readLine();
 			String l;
 			while ((l = in.readLine()) != null) {
