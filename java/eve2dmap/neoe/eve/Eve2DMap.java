@@ -44,19 +44,17 @@ public class Eve2DMap {
 
 		private float miny = Float.POSITIVE_INFINITY;
 
-		float zoom = 1.0f;
+		private float zoomx = 1;
 
-		float zoomx = 0;
+		private float zoomy = 1;
 
-		float zoomy = 0;
+		private float bx;
 
-		float bx;
+		private float zx;
 
-		float zx;
+		private float by;
 
-		float by;
-
-		float zy;
+		private float zy;
 
 		private int _y;
 
@@ -74,11 +72,11 @@ public class Eve2DMap {
 
 		private int[] drawx;
 
-		int[] linefrom;
+		private int[] linefrom;
 
-		int[] lineto;
+		private int[] lineto;
 
-		int linecnt;
+		private int linecnt;
 
 		public MapPanel() {
 			pointx = new float[MAXP];
@@ -140,7 +138,7 @@ public class Eve2DMap {
 			g2.setColor(Color.WHITE);
 			float dx = maxx - minx;
 			float dy = maxy - miny;
-			int dc=0;
+			int dc = 0;
 			for (int i = 0; i < linecnt; i++) {
 				int f = linefrom[i];
 				int t = lineto[i];
@@ -156,7 +154,8 @@ public class Eve2DMap {
 				// System.out.println(String.format("line (%s,%s)-(%s,%s)",
 				// new Object[] { x1, y1, x2, y2 }));
 			}
-			System.out.println(String.format("draw lines %s/%s" ,new Object[]{ dc,linecnt}));
+			System.out.println(String.format("draw lines %s/%s", new Object[] {
+					dc, linecnt }));
 		}
 
 		private void drawPoints(Graphics2D g2) {
@@ -169,7 +168,7 @@ public class Eve2DMap {
 			// System.out.println(String.format("%s,%s,%s,%s", new Object[] {
 			// maxx, minx, maxy, miny }));
 			int maxl = 1;
-			int dc=0;
+			int dc = 0;
 			for (int i = 0; i < pcnt; i++) {
 				int x = transx(i, width, dx);
 				int y = transy(i, height, dy);
@@ -189,7 +188,8 @@ public class Eve2DMap {
 				dc++;
 				// System.out.println(x + "," + y);
 			}
-			System.out.println(String.format("draw points %s/%s" ,new Object[]{ dc,pcnt}));
+			System.out.println(String.format("draw points %s/%s", new Object[] {
+					dc, pcnt }));
 
 		}
 
@@ -304,27 +304,32 @@ public class Eve2DMap {
 				a = 0.9f;
 			}
 			// normalize drag
-			bx -= (dragx + _dragx) * zx / zoom;
-			by -= (dragy + _dragy) * zy / zoom;
+			bx -= (dragx + _dragx) * zx / zoomx;
+			by -= (dragy + _dragy) * zy / zoomy;
 			dragx = 0;
 			dragy = 0;
 			_dragx = 0;
 			_dragy = 0;
 			// zoom
-			float g = (1 / zoom - 1 / (a * zoom));
-			bx += e.getX() * zx * g;
-			by += e.getY() * zy * g;
-			zoom *= a;
+			if (e.isShiftDown()) {
+				by += e.getY() * zy * (1 / zoomy - 1 / (a * zoomy));
+				zoomy *= a;
+			} else {
+				bx += e.getX() * zx * (1 / zoomx - 1 / (a * zoomx));
+				by += e.getY() * zy * (1 / zoomy - 1 / (a * zoomy));
+				zoomx *= a;
+				zoomy *= a;
+			}
 			repaint();
 		}
 
 		private int transy(int f, int height, float dy) {
-			return dragy + _dragy + Math.round(zoom * (pointy[f] - by) / zy);
+			return dragy + _dragy + Math.round(zoomy * (pointy[f] - by) / zy);
 
 		}
 
 		private int transx(int f, int width, float dx) {
-			return dragx + _dragx + Math.round(zoom * (pointx[f] - bx) / zx);
+			return dragx + _dragx + Math.round(zoomx * (pointx[f] - bx) / zx);
 
 		}
 
@@ -368,6 +373,9 @@ public class Eve2DMap {
 			Object[] buf = new Object[3];
 			while ((l = in.readLine()) != null) {
 				String[] w = l.split("\\,");
+				if (w[0].compareTo("11000001") >= 0) {
+					continue;// skip J999999 systems
+				}
 				buf[0] = w[3];
 				buf[1] = Float.valueOf(w[4]);
 				buf[2] = Float.valueOf(w[5]);
