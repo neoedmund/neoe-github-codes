@@ -1,5 +1,9 @@
 package neoe.eve;
 
+/**
+ * @deprecated
+ *
+ */
 public class NoFormat {
 	public static Object[] getPoints() {
 		return new Object[] { 
