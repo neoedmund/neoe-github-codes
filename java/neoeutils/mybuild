@@ -1,0 +1,5 @@
+{ /* neoebuild script */
+	prjs : [
+		[ neoeutils .  ]
+	]
+}
